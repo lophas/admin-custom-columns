@@ -2,7 +2,7 @@
 /*
     Plugin Name: Post modified column
     Description: Adds sortable post modified column to edit.php and upload.php
-    Version: 1.1
+    Version: 1.2
     Plugin URI: https://github.com/lophas/admin-custom-columns
     GitHub Plugin URI: https://github.com/lophas/admin-custom-columns
     Author: Attila Seres
@@ -23,7 +23,18 @@ class modified_column
     {
         if (is_admin()) {
             add_action('admin_init', array($this,'admin_init'));
+            add_action('load-edit.php', [$this, 'load_edit']); // default sort order
         }
+    }
+    public function load_edit() { // default sort order
+    //	if($_GET['post_type'] !== 'page'|| isset($_GET['orderby'])) return;
+      if(isset($_GET['orderby'])) return;
+    	if(in_array($_GET['post_status'],['pending','draft'])) {
+        add_action('pre_get_posts',  function($query) {
+            $query->set( 'orderby', 'modified' );
+            $query->set( 'order', 'desc' );
+        }, 6);
+      }
     }
     public function admin_init()
     {
