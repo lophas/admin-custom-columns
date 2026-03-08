@@ -852,75 +852,73 @@ if ( isset( $post_data['post_parent'] ) && (int) $post_data['post_parent'] ) {
 			'locked'  => $locked,
 		);
 	}
+	/**
+	 * Handle AJAX request for inline media save.
+	 */
+	public function wp_ajax_inline_media_save() {
+		global $mode;
 
+		check_ajax_referer( 'inlineeditnonce', '_inline_edit' );
 
+		if ( ! isset( $_POST['post_ID'] ) || ! (int) $_POST['post_ID'] ) {
+			wp_die();
+		}
 
-/**
- * Handle AJAX request for inline media save.
- */
-function wp_ajax_inline_media_save() {
-	global $mode;
+		$post_ID = (int) $_POST['post_ID'];
+		if ( get_post_type( $post_ID ) !== 'attachment' ) {
+			return;
+		}
+		remove_all_actions( current_action() );
 
-	check_ajax_referer( 'inlineeditnonce', '_inline_edit' );
+		if ( ! current_user_can( 'edit_post', $post_ID ) ) {
+			wp_die( __( 'Sorry, you are not allowed to edit this post.' ) );
+		}
 
-	if ( ! isset( $_POST['post_ID'] ) || ! (int) $_POST['post_ID'] ) {
-		wp_die();
-	}
+		$data = &$_POST;
 
-	$post_ID = (int) $_POST['post_ID'];
-	if ( get_post_type( $post_ID ) !== 'attachment' ) {
-		return;
-	}
-	remove_all_actions( current_action() );
+		$post = get_post( $post_ID, ARRAY_A );
 
-	if ( ! current_user_can( 'edit_post', $post_ID ) ) {
-		wp_die( __( 'Sorry, you are not allowed to edit this post.' ) );
-	}
+		// Since it's coming from the database.
+		$post = wp_slash( $post );
 
-	$data = &$_POST;
+		$data['content'] = $post['post_content'];
+		$data['excerpt'] = $post['post_excerpt'];
 
-	$post = get_post( $post_ID, ARRAY_A );
+		// Rename.
+		$data['user_ID'] = get_current_user_id();
 
-	// Since it's coming from the database.
-	$post = wp_slash( $post );
-
-	$data['content'] = $post['post_content'];
-	$data['excerpt'] = $post['post_excerpt'];
-
-	// Rename.
-	$data['user_ID'] = get_current_user_id();
-
-	if ( isset( $data['post_parent'] ) ) {
-		$data['parent_id'] = $data['post_parent'];
-	}
-	// Exclude terms from taxonomies that are not supposed to appear in Quick Edit.
-	if ( ! empty( $data['tax_input'] ) ) {
-		foreach ( $data['tax_input'] as $taxonomy => $terms ) {
-			$tax_object = get_taxonomy( $taxonomy );
-			/** This filter is documented in wp-admin/includes/class-wp-posts-list-table.php */
-			if ( ! apply_filters( 'quick_edit_show_taxonomy', $tax_object->show_in_quick_edit, $taxonomy, $post['post_type'] ) ) {
-				unset( $data['tax_input'][ $taxonomy ] );
+		if ( isset( $data['post_parent'] ) ) {
+			$data['parent_id'] = $data['post_parent'];
+		}
+		// Exclude terms from taxonomies that are not supposed to appear in Quick Edit.
+		if ( ! empty( $data['tax_input'] ) ) {
+			foreach ( $data['tax_input'] as $taxonomy => $terms ) {
+				$tax_object = get_taxonomy( $taxonomy );
+				/** This filter is documented in wp-admin/includes/class-wp-posts-list-table.php */
+				if ( ! apply_filters( 'quick_edit_show_taxonomy', $tax_object->show_in_quick_edit, $taxonomy, $post['post_type'] ) ) {
+					unset( $data['tax_input'][ $taxonomy ] );
+				}
 			}
 		}
+
+		// Update the post.
+		edit_post();
+
+		// $wp_list_table = _get_list_table( 'WP_Posts_List_Table', array( 'screen' => $_POST['screen'] ) );
+		$wp_list_table = _get_list_table( 'WP_Media_List_Table', array( 'screen' => $_POST['screen'] ) );
+
+		global $post;
+		$post = get_post( $post_ID );
+		$post_owner = ( get_current_user_id() === (int) $post->post_author ) ? 'self' : 'other';
+
+		?>
+		<tr id="post-<?php echo $post->ID; ?>" class="<?php echo trim( ' author-' . $post_owner . ' status-' . $post->post_status ); ?>">
+		<?php $wp_list_table->single_row_columns( $post ); ?>
+		</tr>
+		<?php
+
+		wp_die();
 	}
-
-	// Update the post.
-	edit_post();
-
-	//	$wp_list_table = _get_list_table( 'WP_Posts_List_Table', array( 'screen' => $_POST['screen'] ) );
-	$wp_list_table = _get_list_table( 'WP_Media_List_Table', array( 'screen' => $_POST['screen'] ) );
-
-	global $post;
-	$post = get_post( $post_ID );
-	$post_owner = ( get_current_user_id() === (int) $post->post_author ) ? 'self' : 'other';
-
-	?>
-	<tr id="post-<?php echo $post->ID; ?>" class="<?php echo trim( ' author-' . $post_owner . ' status-' . $post->post_status ); ?>">
-	<?php $wp_list_table->single_row_columns( $post ); ?>
-	</tr>
-	<?php
-
-	wp_die();
 }
-	
 
+media_inline_bulk_edit::instance();
