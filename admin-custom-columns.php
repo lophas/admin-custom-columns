@@ -5,7 +5,7 @@
     Version: 1.0
     Plugin URI: https://github.com/lophas/admin-custom-columns
     GitHub Plugin URI: https://github.com/lophas/admin-custom-columns
-    Plugin URI:
+    Plugin URI: NA
     Author: Attila Seres
     Author URI: //lophas.github.io
     License: GPL2
