@@ -7,7 +7,8 @@
     GitHub Plugin URI: https://github.com/lophas/admin-custom-columns
     Plugin URI:
     Author: Attila Seres
-    Author URI:
+    Author URI: //lophas.github.io
+    License: GPL2
 */
 if (!class_exists('admin_custom_columns')) :
    class admin_custom_columns
