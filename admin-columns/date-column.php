@@ -159,31 +159,4 @@ class date_column {
 }
 
 date_column::instance();
-                  sprintf(__('%1$s %2$d'), $wp_locale->get_month($month), $year)
-              );
-          } ?>
-          </select>
-  <?php
-           $this->days_dropdown();
-    }
-
-    public function days_dropdown()
-    {
-        $day = (int) $_GET['m'] ? (isset($_GET['day']) ? (int) $_GET['day'] : 0) : 0; ?>
-          <select name="day" id="filter-by-day">
-              <option<?php selected($day, 0); ?> value="0"><?php _e('All days'); ?></option>
-  <?php
-          for ($i=1;$i<=31;$i++) {
-              printf(
-                  "<option %s value='%s'>%s</option>\n",
-                  selected($day, $i, false),
-                  zeroise($i, 2),
-                  $i
-              );
-          } ?>
-          </select>
-  <?php
-    }
-}
-date_column::instance();
 
